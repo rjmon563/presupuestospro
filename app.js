@@ -1,175 +1,137 @@
 let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
-let agenda = JSON.parse(localStorage.getItem("agenda")) || [];
-
 let clienteActual = null;
 let obraActual = null;
+
 let calcValor = "0";
 let calcTipo = "";
 
-/* ===== INICIO ===== */
-document.addEventListener("DOMContentLoaded", () => {
-  renderClientes();
-  renderAgenda();
-});
+const IVA = 0.21;
 
-/* ===== NAVEGACIÓN ===== */
+document.addEventListener("DOMContentLoaded", renderClientes);
+
+/* NAVEGACIÓN */
 function irAPantalla(p) {
-  ["clientes","expediente","nombre-obra","trabajo","agenda"].forEach(x => {
-    document.getElementById("pantalla-" + x)?.classList.add("hidden");
-  });
+  document.querySelectorAll("[id^='pantalla-']").forEach(x => x.classList.add("hidden"));
   document.getElementById("pantalla-" + p).classList.remove("hidden");
 }
 
-/* ===== CLIENTES ===== */
+/* CLIENTES */
 function nuevoCliente() {
   document.getElementById("modal-cliente").classList.remove("hidden");
 }
 
-function cerrarModalCliente() {
-  document.getElementById("modal-cliente").classList.add("hidden");
-  document.getElementById("input-nuevo-cliente").value = "";
-}
-
-function guardarNuevoCliente() {
-  const nombre = document.getElementById("input-nuevo-cliente").value.trim();
+function guardarCliente() {
+  const nombre = input("input-cliente");
   if (!nombre) return;
   clientes.push({ id: Date.now(), nombre, obras: [] });
   guardar();
+  cerrar("modal-cliente");
   renderClientes();
-  cerrarModalCliente();
 }
 
 function renderClientes() {
-  const lista = document.getElementById("lista-clientes");
-  lista.innerHTML = "";
+  const l = id("lista-clientes");
+  l.innerHTML = "";
   clientes.forEach(c => {
     const d = document.createElement("div");
-    d.className = "bg-white p-4 rounded-2xl shadow font-bold active-scale";
+    d.className = "bg-white p-4 rounded-xl shadow font-bold";
     d.textContent = c.nombre;
     d.onclick = () => abrirCliente(c.id);
-    lista.appendChild(d);
+    l.appendChild(d);
   });
 }
 
-function abrirCliente(id) {
-  clienteActual = clientes.find(c => c.id === id);
-  document.getElementById("ficha-cliente-detalle").innerHTML =
+function abrirCliente(idc) {
+  clienteActual = clientes.find(c => c.id === idc);
+  id("detalle-cliente").innerHTML =
     `<h2 class="text-xl font-black">${clienteActual.nombre}</h2>`;
   irAPantalla("expediente");
 }
 
-/* ===== OBRAS ===== */
+/* OBRAS */
 function confirmarNombreObra() {
-  const nombre = document.getElementById("input-nombre-obra").value.trim();
-  if (!nombre) return;
+  const nombre = input("input-nombre-obra");
   obraActual = { id: Date.now(), nombre, mediciones: [] };
   clienteActual.obras.push(obraActual);
   guardar();
-  document.getElementById("titulo-obra-actual").textContent = nombre;
-  renderBotonesTrabajo();
+  id("titulo-obra").textContent = nombre;
   renderMediciones();
   irAPantalla("trabajo");
 }
 
-function guardarObraCompleta() {
-  guardar();
-  irAPantalla("expediente");
-}
-
-/* ===== MEDICIONES ===== */
-function renderBotonesTrabajo() {
-  const c = document.getElementById("botones-trabajo");
-  c.innerHTML = "";
-  ["m²","Horas","Unidades"].forEach(t => {
-    const b = document.createElement("button");
-    b.className = "bg-blue-600 text-white py-6 rounded-2xl font-black active-scale";
-    b.textContent = t;
-    b.onclick = () => abrirCalc(t);
-    c.appendChild(b);
-  });
-}
-
-function renderMediciones() {
-  const l = document.getElementById("lista-medidas-obra");
-  l.innerHTML = "";
-  obraActual.mediciones.forEach(m => {
-    const d = document.createElement("div");
-    d.className = "bg-white p-3 rounded-xl shadow";
-    d.textContent = `${m.tipo}: ${m.valor}`;
-    l.appendChild(d);
-  });
-}
-
-/* ===== CALCULADORA ===== */
+/* CALCULADORA */
 function abrirCalc(tipo) {
-  calcValor = "0";
   calcTipo = tipo;
-  document.getElementById("modal-calc").classList.remove("hidden");
+  calcValor = "0";
+  id("calc-display").textContent = "0";
+  id("calc-titulo").textContent = tipo;
+  id("precio-unitario").value = "";
+  id("modal-calc").classList.remove("hidden");
 }
 
-function cerrarCalc() {
-  document.getElementById("modal-calc").classList.add("hidden");
-}
+function tecla(v) {
+  if (v === "OK") {
+    const precio = parseFloat(id("precio-unitario").value || 0);
+    const cantidad = parseFloat(calcValor);
+    const total = cantidad * precio;
 
-function teclear(v) {
-  if (v === "DEL") calcValor = "0";
-  else if (v === "OK") {
-    obraActual.mediciones.push({ tipo: calcTipo, valor: calcValor });
+    obraActual.mediciones.push({
+      tipo: calcTipo,
+      cantidad,
+      precio,
+      total
+    });
+
     guardar();
     renderMediciones();
-    cerrarCalc();
+    cerrar("modal-calc");
     return;
-  } else calcValor = calcValor === "0" ? v : calcValor + v;
-  document.getElementById("calc-display").textContent = calcValor;
+  }
+  calcValor = calcValor === "0" ? v : calcValor + v;
+  id("calc-display").textContent = calcValor;
 }
 
-/* ===== AGENDA ===== */
-function abrirModalAgenda() {
-  document.getElementById("modal-agenda").classList.remove("hidden");
-}
-
-function guardarCita() {
-  agenda.push({
-    id: Date.now(),
-    fecha: document.getElementById("agenda-fecha").value,
-    nota: document.getElementById("agenda-nota").value
-  });
-  guardar();
-  renderAgenda();
-  document.getElementById("modal-agenda").classList.add("hidden");
-}
-
-function renderAgenda() {
-  const l = document.getElementById("lista-agenda");
-  if (!l) return;
+/* MEDICIONES + TOTALES */
+function renderMediciones() {
+  const l = id("lista-mediciones");
   l.innerHTML = "";
-  agenda.forEach(a => {
+  let subtotal = 0;
+
+  obraActual.mediciones.forEach(m => {
+    subtotal += m.total;
     const d = document.createElement("div");
-    d.className = "bg-white p-4 rounded-xl shadow";
-    d.textContent = `${a.fecha} — ${a.nota}`;
+    d.className = "bg-white p-3 rounded-xl shadow";
+    d.textContent = `${m.tipo}: ${m.cantidad} x ${m.precio}€ = ${m.total.toFixed(2)}€`;
     l.appendChild(d);
   });
+
+  const iva = subtotal * IVA;
+  const total = subtotal + iva;
+
+  id("subtotal").textContent = subtotal.toFixed(2) + " €";
+  id("iva").textContent = iva.toFixed(2) + " €";
+  id("total").textContent = total.toFixed(2) + " €";
 }
 
-/* ===== PDF ===== */
+/* PDF */
 function generarPDF() {
-  let html = `<strong>Cliente:</strong> ${clienteActual.nombre}<br><strong>Obra:</strong> ${obraActual.nombre}<hr>`;
+  let html = `
+    <h1>${clienteActual.nombre}</h1>
+    <h2>${obraActual.nombre}</h2><hr><br>
+  `;
   obraActual.mediciones.forEach(m => {
-    html += `${m.tipo}: ${m.valor}<br>`;
+    html += `${m.tipo}: ${m.cantidad} x ${m.precio}€ = ${m.total.toFixed(2)}€<br>`;
   });
-  document.getElementById("print-contenido").innerHTML = html;
+  html += `<br><strong>Total: ${id("total").textContent}</strong>`;
+
+  id("print-contenido").innerHTML = html;
   window.print();
 }
 
-/* ===== STORAGE ===== */
+/* UTILIDADES */
 function guardar() {
   localStorage.setItem("clientes", JSON.stringify(clientes));
-  localStorage.setItem("agenda", JSON.stringify(agenda));
 }
-
-/* ===== PWA ===== */
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js");
-  });
-}
+function id(x) { return document.getElementById(x); }
+function input(x) { return id(x).value.trim(); }
+function cerrar(x) { id(x).classList.add("hidden"); }
