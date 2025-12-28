@@ -1,4 +1,4 @@
-const CACHE_NAME = "presupuestospro-v1.3";
+const CACHE_NAME = "presupuestospro-v1.4";
 
 const FILES_TO_CACHE = [
   "./",
@@ -33,15 +33,14 @@ self.addEventListener("activate", event => {
 });
 
 // FETCH → OFFLINE FIRST
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return (
-        response ||
-        fetch(event.request).catch(() =>
-          caches.match("./index.html")
-        )
-      );
-    })
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      )
+    )
   );
 });
+
+
