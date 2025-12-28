@@ -2,41 +2,77 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>PresupuestosPro</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e40af">
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e40af">
-
   <style>
-    .active-scale:active { transform: scale(0.9); transition: 0.1s; }
-    .no-scroll { overflow: hidden; position: fixed; width: 100%; }
+    .active-scale:active { transform: scale(0.95); transition: 0.1s; }
   </style>
 </head>
 
-<body class="bg-slate-100 font-sans text-slate-900">
+<body class="bg-slate-100 text-slate-900 font-sans">
 
-<!-- PANTALLA CLIENTES -->
+<!-- ================= CLIENTES ================= -->
 <div id="pantalla-clientes" class="p-4 max-w-lg mx-auto">
   <header class="flex justify-between items-center mt-4 mb-6">
     <h1 class="text-2xl font-black italic text-blue-800 uppercase">Clientes</h1>
-    <button onclick="nuevoCliente()" class="bg-blue-600 text-white w-14 h-14 rounded-2xl text-4xl font-bold shadow-xl active-scale">+</button>
+    <button onclick="nuevoCliente()"
+      class="bg-blue-600 text-white w-14 h-14 rounded-2xl text-4xl font-bold shadow-xl active-scale">+</button>
   </header>
   <div id="lista-clientes" class="space-y-4"></div>
 </div>
 
-<!-- MODAL CALCULADORA -->
-<div id="modal-calc" class="hidden fixed inset-0 bg-slate-900 z-[999] flex flex-col p-4 text-white" role="dialog" aria-modal="true">
+<!-- ================= EXPEDIENTE ================= -->
+<div id="pantalla-expediente" class="hidden p-4 max-w-lg mx-auto">
+  <button onclick="irAPantalla('clientes')" class="text-blue-600 font-bold mb-4 uppercase text-xs">← Volver</button>
+  <div id="ficha-cliente-detalle"></div>
+  <button onclick="irAPantalla('nombre-obra')"
+    class="w-full bg-blue-600 text-white py-5 rounded-3xl font-black uppercase mt-6 shadow-lg active-scale">
+    Nueva Obra / Parte
+  </button>
+</div>
+
+<!-- ================= NOMBRE OBRA ================= -->
+<div id="pantalla-nombre-obra" class="hidden p-6 max-w-lg mx-auto">
+  <input id="input-nombre-obra" type="text" placeholder="Nombre del trabajo..."
+    class="w-full p-5 rounded-2xl border-2 mb-6 font-bold">
+  <button onclick="confirmarNombreObra()"
+    class="w-full bg-green-600 text-white py-5 rounded-3xl font-black uppercase active-scale">
+    Empezar
+  </button>
+</div>
+
+<!-- ================= TRABAJO ================= -->
+<div id="pantalla-trabajo" class="hidden p-4 max-w-lg mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <button onclick="irAPantalla('expediente')" class="text-red-500 font-bold uppercase text-xs">Cerrar</button>
+    <h2 id="titulo-obra-actual" class="font-black italic text-blue-800 uppercase text-xs"></h2>
+    <button onclick="guardarObraCompleta()"
+      class="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-xs uppercase active-scale">
+      Guardar
+    </button>
+  </div>
+
+  <div id="botones-trabajo" class="grid grid-cols-2 gap-4"></div>
+  <div id="lista-medidas-obra" class="mt-8 space-y-2"></div>
+</div>
+
+<!-- ================= CALCULADORA ================= -->
+<div id="modal-calc" class="hidden fixed inset-0 bg-slate-900 z-[999] flex flex-col p-4 text-white">
   <div class="flex justify-between items-center mb-4">
     <div id="calc-titulo" class="font-black uppercase text-blue-400"></div>
     <button onclick="cerrarCalc()" class="bg-red-500 px-4 py-2 rounded-lg font-bold">✕</button>
   </div>
 
-  <div id="calc-display" class="bg-white text-slate-800 text-4xl font-black p-6 rounded-2xl text-right mb-4">0</div>
+  <div id="calc-display"
+    class="bg-white text-slate-800 text-4xl font-black p-6 rounded-2xl text-right mb-4">0</div>
 
   <div class="grid grid-cols-3 gap-3 flex-1 font-black text-2xl">
     <button onclick="teclear('7')" class="bg-white/10 rounded-2xl p-4 active-scale">7</button>
@@ -49,47 +85,32 @@
     <button onclick="teclear('2')" class="bg-white/10 rounded-2xl p-4 active-scale">2</button>
     <button onclick="teclear('3')" class="bg-white/10 rounded-2xl p-4 active-scale">3</button>
     <button onclick="teclear('0')" class="bg-white/10 rounded-2xl p-4 active-scale">0</button>
-    <button onclick="teclear(',')" class="bg-white/10 rounded-2xl p-4 active-scale">,</button>
+    <button onclick="teclear('.')" class="bg-white/10 rounded-2xl p-4 active-scale">,</button>
     <button onclick="teclear('+')" class="bg-orange-500 rounded-2xl p-4 active-scale">+</button>
     <button onclick="teclear('DEL')" class="bg-red-500/20 text-red-500 text-sm rounded-2xl p-4 active-scale">BORRAR</button>
     <button onclick="teclear('OK')" class="col-span-2 bg-blue-600 rounded-2xl active-scale font-black">ACEPTAR</button>
   </div>
 </div>
 
-<script>
-/* ===== APP JS ===== */
+<!-- ================= MODAL NUEVO CLIENTE ================= -->
+<div id="modal-cliente"
+  class="hidden fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center">
+  <div class="bg-white p-6 rounded-2xl w-[90%] max-w-sm">
+    <h2 class="font-black text-xl mb-4">Nuevo cliente</h2>
 
-let display = "0";
+    <input id="input-nuevo-cliente" type="text"
+      class="w-full p-4 border rounded-xl mb-4 font-bold"
+      placeholder="Nombre del cliente">
 
-function teclear(valor) {
-  if (valor === "DEL") {
-    display = "0";
-  } else if (valor === "OK") {
-    cerrarCalc();
-    return;
-  } else {
-    if (display === "0") display = "";
-    display += valor;
-  }
-  document.getElementById("calc-display").innerText = display;
-}
+    <div class="flex gap-3">
+      <button onclick="cerrarModalCliente()"
+        class="flex-1 bg-slate-200 py-3 rounded-xl font-bold">Cancelar</button>
+      <button onclick="guardarNuevoCliente()"
+        class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Guardar</button>
+    </div>
+  </div>
+</div>
 
-function cerrarCalc() {
-  document.getElementById("modal-calc").classList.add("hidden");
-  document.body.classList.remove("no-scroll");
-}
-
-function nuevoCliente() {
-  alert("Función nuevo cliente (base)");
-}
-
-/* ===== SERVICE WORKER REGISTRO ===== */
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js");
-  });
-}
-</script>
-
+<script src="app.js"></script>
 </body>
 </html>
