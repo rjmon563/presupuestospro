@@ -53,10 +53,14 @@
     <button onclick="generarPDF()" class="bg-slate-800 text-white px-3 py-2 rounded-xl text-xs">PDF</button>
   </header>
 
+  <!-- BOTONES PROFESIONALES -->
   <div class="grid grid-cols-2 gap-4 mb-6">
-    <button onclick="abrirCalc('m²')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">m²</button>
+    <button onclick="abrirCalc('Techos')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Techos</button>
+    <button onclick="abrirCalc('Tabiques')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Tabiques</button>
+    <button onclick="abrirCalc('Cajones')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Cajones</button>
+    <button onclick="abrirCalc('Tabicas')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Tabicas</button>
+    <button onclick="abrirCalc('Cantoneras')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Cantoneras</button>
     <button onclick="abrirCalc('Horas')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Horas</button>
-    <button onclick="abrirCalc('Unidades')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Unidades</button>
   </div>
 
   <div id="lista-mediciones" class="space-y-2"></div>
@@ -86,19 +90,34 @@
   </div>
 </div>
 
-<!-- ================= MODAL CALC ================= -->
+<!-- ================= MODAL CALCULADORA ================= -->
 <div id="modal-calc" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center">
   <div class="bg-white p-4 rounded-2xl w-[90%] max-w-sm">
     <div id="calc-titulo" class="font-black mb-2"></div>
+
     <input id="precio-unitario" type="number" placeholder="Precio unitario €"
       class="w-full p-2 border rounded-xl mb-2">
+
     <div id="calc-display" class="text-3xl font-black text-right mb-4">0</div>
-    <div class="grid grid-cols-3 gap-3">
-      <button onclick="tecla('7')">7</button><button onclick="tecla('8')">8</button><button onclick="tecla('9')">9</button>
-      <button onclick="tecla('4')">4</button><button onclick="tecla('5')">5</button><button onclick="tecla('6')">6</button>
-      <button onclick="tecla('1')">1</button><button onclick="tecla('2')">2</button><button onclick="tecla('3')">3</button>
-      <button onclick="tecla('0')">0</button><button onclick="tecla('.')">.</button>
-      <button onclick="tecla('OK')" class="bg-green-600 text-white">OK</button>
+
+    <!-- TECLADO METRO LÁSER -->
+    <div class="grid grid-cols-4 gap-3">
+      <button onclick="tecla('7')">7</button>
+      <button onclick="tecla('8')">8</button>
+      <button onclick="tecla('9')">9</button>
+      <button onclick="tecla('+')" class="bg-orange-500 text-white font-black">+</button>
+
+      <button onclick="tecla('4')">4</button>
+      <button onclick="tecla('5')">5</button>
+      <button onclick="tecla('6')">6</button>
+      <button onclick="tecla('.')">.</button>
+
+      <button onclick="tecla('1')">1</button>
+      <button onclick="tecla('2')">2</button>
+      <button onclick="tecla('3')">3</button>
+      <button onclick="tecla('OK')" class="bg-green-600 text-white font-black">OK</button>
+
+      <button onclick="tecla('0')" class="col-span-4">0</button>
     </div>
   </div>
 </div>
