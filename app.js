@@ -1,31 +1,35 @@
-/***********************
- * PRESUPUESTOSPRO v3
- ***********************/
-
-/* ========= ESTADO ========= */
+/* ================= ESTADO ================= */
 let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
 let clienteActual = null;
 let obraActual = null;
 let calcValor = "0";
-let calcCallback = null;
 
-/* ========= INICIO ========= */
+/* ================= INICIO ================= */
 document.addEventListener("DOMContentLoaded", () => {
   renderClientes();
 });
 
-/* ========= NAVEGACIÓN ========= */
-function irAPantalla(pantalla) {
-  ["clientes","expediente","nombre-obra","trabajo"].forEach(p => {
-    const el = document.getElementById("pantalla-" + p);
+/* ================= NAVEGACIÓN ================= */
+function irAPantalla(p) {
+  ["clientes","expediente","nombre-obra","trabajo"].forEach(x => {
+    const el = document.getElementById("pantalla-" + x);
     if (el) el.classList.add("hidden");
   });
-  document.getElementById("pantalla-" + pantalla).classList.remove("hidden");
+  document.getElementById("pantalla-" + p).classList.remove("hidden");
 }
 
-/* ========= CLIENTES ========= */
+/* ================= CLIENTES ================= */
 function nuevoCliente() {
-  const nombre = prompt("Nombre del cliente");
+  document.getElementById("modal-cliente").classList.remove("hidden");
+}
+
+function cerrarModalCliente() {
+  document.getElementById("modal-cliente").classList.add("hidden");
+  document.getElementById("input-nuevo-cliente").value = "";
+}
+
+function guardarNuevoCliente() {
+  const nombre = document.getElementById("input-nuevo-cliente").value.trim();
   if (!nombre) return;
 
   clientes.push({
@@ -36,6 +40,7 @@ function nuevoCliente() {
 
   guardar();
   renderClientes();
+  cerrarModalCliente();
 }
 
 function renderClientes() {
@@ -67,22 +72,21 @@ function abrirCliente(id) {
   irAPantalla("expediente");
 }
 
-/* ========= OBRAS ========= */
+/* ================= OBRAS ================= */
 function confirmarNombreObra() {
   const input = document.getElementById("input-nombre-obra");
-  const nombre = input.value.trim();
-  if (!nombre) return alert("Introduce un nombre");
+  if (!input.value.trim()) return;
 
   obraActual = {
     id: Date.now(),
-    nombre,
+    nombre: input.value,
     mediciones: []
   };
 
   clienteActual.obras.push(obraActual);
   guardar();
 
-  document.getElementById("titulo-obra-actual").textContent = nombre;
+  document.getElementById("titulo-obra-actual").textContent = obraActual.nombre;
   renderBotonesTrabajo();
   renderMediciones();
 
@@ -92,11 +96,10 @@ function confirmarNombreObra() {
 
 function guardarObraCompleta() {
   guardar();
-  alert("Obra guardada");
   irAPantalla("expediente");
 }
 
-/* ========= TRABAJO / MEDICIONES ========= */
+/* ================= MEDICIONES ================= */
 function renderBotonesTrabajo() {
   const cont = document.getElementById("botones-trabajo");
   cont.innerHTML = "";
@@ -122,19 +125,14 @@ function renderMediciones() {
   });
 }
 
-/* ========= CALCULADORA ========= */
+/* ================= CALCULADORA ================= */
 function abrirCalculadora(tipo) {
   calcValor = "0";
-  actualizarDisplay();
   document.getElementById("calc-titulo").textContent = tipo;
-
-  calcCallback = valor => {
-    obraActual.mediciones.push({ tipo, valor });
-    guardar();
-    renderMediciones();
-  };
-
+  actualizarDisplay();
   document.getElementById("modal-calc").classList.remove("hidden");
+
+  window._calcTipo = tipo;
 }
 
 function cerrarCalc() {
@@ -142,14 +140,13 @@ function cerrarCalc() {
 }
 
 function teclear(v) {
-  if (v === "DEL") {
-    calcValor = "0";
-  } else if (v === "OK") {
-    if (calcCallback) calcCallback(calcValor);
+  if (v === "DEL") calcValor = "0";
+  else if (v === "OK") {
+    obraActual.mediciones.push({ tipo: window._calcTipo, valor: calcValor });
+    guardar();
+    renderMediciones();
     cerrarCalc();
     return;
-  } else if (v === "+") {
-    calcValor += " + ";
   } else {
     if (calcValor === "0") calcValor = v;
     else calcValor += v;
@@ -161,12 +158,12 @@ function actualizarDisplay() {
   document.getElementById("calc-display").textContent = calcValor;
 }
 
-/* ========= GUARDADO ========= */
+/* ================= STORAGE ================= */
 function guardar() {
   localStorage.setItem("clientes", JSON.stringify(clientes));
 }
 
-/* ========= PWA / SERVICE WORKER ========= */
+/* ================= PWA ================= */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js");
