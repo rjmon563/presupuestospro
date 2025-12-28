@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PresupuestosPro</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e40af">
+
+  <style>
+    .active-scale:active { transform: scale(0.9); transition: 0.1s; }
+    .no-scroll { overflow: hidden; position: fixed; width: 100%; }
+  </style>
+</head>
+
+<body class="bg-slate-100 font-sans text-slate-900">
+
+<!-- PANTALLA CLIENTES -->
+<div id="pantalla-clientes" class="p-4 max-w-lg mx-auto">
+  <header class="flex justify-between items-center mt-4 mb-6">
+    <h1 class="text-2xl font-black italic text-blue-800 uppercase">Clientes</h1>
+    <button onclick="nuevoCliente()" class="bg-blue-600 text-white w-14 h-14 rounded-2xl text-4xl font-bold shadow-xl active-scale">+</button>
+  </header>
+  <div id="lista-clientes" class="space-y-4"></div>
+</div>
+
+<!-- MODAL CALCULADORA -->
+<div id="modal-calc" class="hidden fixed inset-0 bg-slate-900 z-[999] flex flex-col p-4 text-white" role="dialog" aria-modal="true">
+  <div class="flex justify-between items-center mb-4">
+    <div id="calc-titulo" class="font-black uppercase text-blue-400"></div>
+    <button onclick="cerrarCalc()" class="bg-red-500 px-4 py-2 rounded-lg font-bold">✕</button>
+  </div>
+
+  <div id="calc-display" class="bg-white text-slate-800 text-4xl font-black p-6 rounded-2xl text-right mb-4">0</div>
+
+  <div class="grid grid-cols-3 gap-3 flex-1 font-black text-2xl">
+    <button onclick="teclear('7')" class="bg-white/10 rounded-2xl p-4 active-scale">7</button>
+    <button onclick="teclear('8')" class="bg-white/10 rounded-2xl p-4 active-scale">8</button>
+    <button onclick="teclear('9')" class="bg-white/10 rounded-2xl p-4 active-scale">9</button>
+    <button onclick="teclear('4')" class="bg-white/10 rounded-2xl p-4 active-scale">4</button>
+    <button onclick="teclear('5')" class="bg-white/10 rounded-2xl p-4 active-scale">5</button>
+    <button onclick="teclear('6')" class="bg-white/10 rounded-2xl p-4 active-scale">6</button>
+    <button onclick="teclear('1')" class="bg-white/10 rounded-2xl p-4 active-scale">1</button>
+    <button onclick="teclear('2')" class="bg-white/10 rounded-2xl p-4 active-scale">2</button>
+    <button onclick="teclear('3')" class="bg-white/10 rounded-2xl p-4 active-scale">3</button>
+    <button onclick="teclear('0')" class="bg-white/10 rounded-2xl p-4 active-scale">0</button>
+    <button onclick="teclear(',')" class="bg-white/10 rounded-2xl p-4 active-scale">,</button>
+    <button onclick="teclear('+')" class="bg-orange-500 rounded-2xl p-4 active-scale">+</button>
+    <button onclick="teclear('DEL')" class="bg-red-500/20 text-red-500 text-sm rounded-2xl p-4 active-scale">BORRAR</button>
+    <button onclick="teclear('OK')" class="col-span-2 bg-blue-600 rounded-2xl active-scale font-black">ACEPTAR</button>
+  </div>
+</div>
+
+<script>
+/* ===== APP JS ===== */
+
+let display = "0";
+
+function teclear(valor) {
+  if (valor === "DEL") {
+    display = "0";
+  } else if (valor === "OK") {
+    cerrarCalc();
+    return;
+  } else {
+    if (display === "0") display = "";
+    display += valor;
+  }
+  document.getElementById("calc-display").innerText = display;
+}
+
+function cerrarCalc() {
+  document.getElementById("modal-calc").classList.add("hidden");
+  document.body.classList.remove("no-scroll");
+}
+
+function nuevoCliente() {
+  alert("Función nuevo cliente (base)");
+}
+
+/* ===== SERVICE WORKER REGISTRO ===== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js");
+  });
+}
+</script>
+
+</body>
+</html>
