@@ -1,107 +1,110 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PresupuestosPro</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PresupuestosPro</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e40af">
+<script src="https://cdn.tailwindcss.com"></script>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <style>
-    .active-scale:active { transform: scale(0.95); transition: 0.1s; }
-    @media print {
-      body * { visibility: hidden; }
-      #print-area, #print-area * { visibility: visible; }
-      #print-area { position: absolute; inset: 0; padding: 24px; }
-    }
-  </style>
+<style>
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area { position: absolute; inset: 0; padding: 24px; }
+}
+</style>
 </head>
 
-<body class="bg-slate-100 text-slate-900 font-sans">
+<body class="bg-slate-100 font-sans">
 
 <!-- ================= CLIENTES ================= -->
 <div id="pantalla-clientes" class="p-4 max-w-lg mx-auto">
-  <header class="flex justify-between items-center mt-4 mb-6">
-    <h1 class="text-2xl font-black italic text-blue-800 uppercase">Clientes</h1>
-    <div class="flex gap-3">
-      <button onclick="irAPantalla('agenda')" class="bg-slate-200 px-4 rounded-xl font-bold">Agenda</button>
-      <button onclick="nuevoCliente()" class="bg-blue-600 text-white w-14 h-14 rounded-2xl text-4xl font-bold shadow-xl active-scale">+</button>
-    </div>
+  <header class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-black text-blue-700">Clientes</h1>
+    <button onclick="nuevoCliente()" class="bg-blue-600 text-white w-14 h-14 rounded-2xl text-4xl font-bold">+</button>
   </header>
-  <div id="lista-clientes" class="space-y-4"></div>
+  <div id="lista-clientes" class="space-y-3"></div>
 </div>
 
 <!-- ================= EXPEDIENTE ================= -->
 <div id="pantalla-expediente" class="hidden p-4 max-w-lg mx-auto">
-  <button onclick="irAPantalla('clientes')" class="text-blue-600 font-bold mb-4 uppercase text-xs">← Volver</button>
-  <div id="ficha-cliente-detalle"></div>
-  <button onclick="irAPantalla('nombre-obra')" class="w-full bg-blue-600 text-white py-5 rounded-3xl font-black uppercase mt-6 shadow-lg active-scale">
-    Nueva Obra / Parte
+  <button onclick="irAPantalla('clientes')" class="mb-4 font-bold text-blue-600">← Volver</button>
+  <div id="detalle-cliente" class="mb-6"></div>
+  <button onclick="irAPantalla('nombre-obra')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black">
+    Nueva obra / parte
   </button>
 </div>
 
 <!-- ================= NOMBRE OBRA ================= -->
-<div id="pantalla-nombre-obra" class="hidden p-6 max-w-lg mx-auto">
-  <input id="input-nombre-obra" type="text" placeholder="Nombre del trabajo..."
-    class="w-full p-5 rounded-2xl border-2 mb-6 font-bold">
-  <button onclick="confirmarNombreObra()" class="w-full bg-green-600 text-white py-5 rounded-3xl font-black uppercase active-scale">
+<div id="pantalla-nombre-obra" class="hidden p-4 max-w-lg mx-auto">
+  <input id="input-nombre-obra" placeholder="Nombre del trabajo"
+    class="w-full p-4 rounded-xl border mb-4 font-bold">
+  <button onclick="confirmarNombreObra()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-black">
     Empezar
   </button>
 </div>
 
 <!-- ================= TRABAJO ================= -->
 <div id="pantalla-trabajo" class="hidden p-4 max-w-lg mx-auto">
-  <div class="flex justify-between items-center mb-6">
-    <button onclick="irAPantalla('expediente')" class="text-red-500 font-bold uppercase text-xs">Cerrar</button>
-    <h2 id="titulo-obra-actual" class="font-black italic text-blue-800 uppercase text-xs"></h2>
-    <div class="flex gap-2">
-      <button onclick="generarPDF()" class="bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold">PDF</button>
-      <button onclick="guardarObraCompleta()" class="bg-green-600 text-white px-3 py-2 rounded-xl text-xs font-bold">Guardar</button>
-    </div>
+  <header class="flex justify-between items-center mb-4">
+    <button onclick="irAPantalla('expediente')" class="text-red-500 font-bold">Cerrar</button>
+    <h2 id="titulo-obra" class="font-black text-blue-700 text-sm"></h2>
+    <button onclick="generarPDF()" class="bg-slate-800 text-white px-3 py-2 rounded-xl text-xs">PDF</button>
+  </header>
+
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <button onclick="abrirCalc('m²')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">m²</button>
+    <button onclick="abrirCalc('Horas')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Horas</button>
+    <button onclick="abrirCalc('Unidades')" class="bg-blue-600 text-white py-6 rounded-2xl font-black">Unidades</button>
   </div>
 
-  <div id="botones-trabajo" class="grid grid-cols-2 gap-4"></div>
-  <div id="lista-medidas-obra" class="mt-8 space-y-2"></div>
-</div>
+  <div id="lista-mediciones" class="space-y-2"></div>
 
-<!-- ================= AGENDA ================= -->
-<div id="pantalla-agenda" class="hidden p-4 max-w-lg mx-auto">
-  <header class="flex justify-between items-center mb-6">
-    <button onclick="irAPantalla('clientes')" class="text-blue-600 font-bold uppercase text-xs">← Volver</button>
-    <button onclick="abrirModalAgenda()" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold">+ Cita</button>
-  </header>
-  <div id="lista-agenda" class="space-y-3"></div>
+  <div class="mt-6 bg-white p-4 rounded-xl shadow space-y-2">
+    <div class="flex justify-between font-bold">
+      <span>Subtotal</span><span id="subtotal">0 €</span>
+    </div>
+    <div class="flex justify-between">
+      <span>IVA (21%)</span><span id="iva">0 €</span>
+    </div>
+    <div class="flex justify-between text-xl font-black text-blue-700">
+      <span>Total</span><span id="total">0 €</span>
+    </div>
+  </div>
 </div>
 
 <!-- ================= MODAL CLIENTE ================= -->
-<div id="modal-cliente" class="hidden fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center">
+<div id="modal-cliente" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center">
   <div class="bg-white p-6 rounded-2xl w-[90%] max-w-sm">
     <h2 class="font-black text-xl mb-4">Nuevo cliente</h2>
-    <input id="input-nuevo-cliente" class="w-full p-4 border rounded-xl mb-4 font-bold" placeholder="Nombre del cliente">
-    <div class="flex gap-3">
-      <button onclick="cerrarModalCliente()" class="flex-1 bg-slate-200 py-3 rounded-xl font-bold">Cancelar</button>
-      <button onclick="guardarNuevoCliente()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Guardar</button>
+    <input id="input-cliente" placeholder="Nombre del cliente"
+      class="w-full p-3 border rounded-xl mb-4">
+    <button onclick="guardarCliente()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">
+      Guardar
+    </button>
+  </div>
+</div>
+
+<!-- ================= MODAL CALC ================= -->
+<div id="modal-calc" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center">
+  <div class="bg-white p-4 rounded-2xl w-[90%] max-w-sm">
+    <div id="calc-titulo" class="font-black mb-2"></div>
+    <input id="precio-unitario" type="number" placeholder="Precio unitario €"
+      class="w-full p-2 border rounded-xl mb-2">
+    <div id="calc-display" class="text-3xl font-black text-right mb-4">0</div>
+    <div class="grid grid-cols-3 gap-3">
+      <button onclick="tecla('7')">7</button><button onclick="tecla('8')">8</button><button onclick="tecla('9')">9</button>
+      <button onclick="tecla('4')">4</button><button onclick="tecla('5')">5</button><button onclick="tecla('6')">6</button>
+      <button onclick="tecla('1')">1</button><button onclick="tecla('2')">2</button><button onclick="tecla('3')">3</button>
+      <button onclick="tecla('0')">0</button><button onclick="tecla('.')">.</button>
+      <button onclick="tecla('OK')" class="bg-green-600 text-white">OK</button>
     </div>
   </div>
 </div>
 
-<!-- ================= MODAL AGENDA ================= -->
-<div id="modal-agenda" class="hidden fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center">
-  <div class="bg-white p-6 rounded-2xl w-[90%] max-w-sm">
-    <h2 class="font-black text-xl mb-4">Nueva cita</h2>
-    <input id="agenda-fecha" type="date" class="w-full p-3 border rounded-xl mb-3">
-    <input id="agenda-nota" placeholder="Nota / trabajo" class="w-full p-3 border rounded-xl mb-4">
-    <button onclick="guardarCita()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Guardar</button>
-  </div>
-</div>
-
-<!-- ================= AREA PDF ================= -->
-<div id="print-area" class="hidden">
-  <h1 class="text-2xl font-black mb-4">Parte de trabajo</h1>
+<!-- ================= PDF ================= -->
+<div id="print-area">
   <div id="print-contenido"></div>
 </div>
 
