@@ -1,203 +1,172 @@
-/*************************
- * ESTADO GLOBAL
- *************************/
+/***********************
+ * PRESUPUESTOSPRO v3
+ ***********************/
+
+/* ========= ESTADO ========= */
 let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
 let clienteActual = null;
 let obraActual = null;
-
 let calcValor = "0";
-let calcContexto = "";
+let calcCallback = null;
 
-/*************************
- * UTILIDADES
- *************************/
-function guardarStorage() {
-  localStorage.setItem("clientes", JSON.stringify(clientes));
-}
+/* ========= INICIO ========= */
+document.addEventListener("DOMContentLoaded", () => {
+  renderClientes();
+});
 
-function $(id) {
-  return document.getElementById(id);
-}
-
-function irAPantalla(nombre) {
-  document.querySelectorAll("[id^='pantalla-']").forEach(p => {
-    p.classList.add("hidden");
+/* ========= NAVEGACIÓN ========= */
+function irAPantalla(pantalla) {
+  ["clientes","expediente","nombre-obra","trabajo"].forEach(p => {
+    const el = document.getElementById("pantalla-" + p);
+    if (el) el.classList.add("hidden");
   });
-  $(`pantalla-${nombre}`).classList.remove("hidden");
+  document.getElementById("pantalla-" + pantalla).classList.remove("hidden");
 }
 
-/*************************
- * CLIENTES
- *************************/
-function renderClientes() {
-  const cont = $("lista-clientes");
-  cont.innerHTML = "";
-
-  clientes.forEach((c, i) => {
-    const div = document.createElement("div");
-    div.className = "bg-white p-4 rounded-2xl shadow font-bold active-scale";
-    div.innerText = c.nombre;
-    div.onclick = () => abrirCliente(i);
-    cont.appendChild(div);
-  });
-}
-
+/* ========= CLIENTES ========= */
 function nuevoCliente() {
-  const nombre = prompt("Nombre del cliente:");
-  if (!nombre || nombre.length < 2) return;
+  const nombre = prompt("Nombre del cliente");
+  if (!nombre) return;
 
-  clientes.push({ nombre, obras: [] });
-  guardarStorage();
+  clientes.push({
+    id: Date.now(),
+    nombre,
+    obras: []
+  });
+
+  guardar();
   renderClientes();
 }
 
-function abrirCliente(index) {
-  clienteActual = index;
-  const cliente = clientes[index];
+function renderClientes() {
+  const lista = document.getElementById("lista-clientes");
+  lista.innerHTML = "";
 
-  $("ficha-cliente-detalle").innerHTML = `
-    <h2 class="text-xl font-black mb-4">${cliente.nombre}</h2>
-    <div class="space-y-2">
-      ${cliente.obras.map(o => `
-        <div class="bg-slate-100 p-3 rounded-xl font-bold">${o.nombre}</div>
-      `).join("")}
-    </div>
+  if (clientes.length === 0) {
+    lista.innerHTML = `<p class="text-center text-slate-500">No hay clientes</p>`;
+    return;
+  }
+
+  clientes.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "bg-white p-4 rounded-2xl shadow font-bold active-scale";
+    div.textContent = c.nombre;
+    div.onclick = () => abrirCliente(c.id);
+    lista.appendChild(div);
+  });
+}
+
+function abrirCliente(id) {
+  clienteActual = clientes.find(c => c.id === id);
+
+  document.getElementById("ficha-cliente-detalle").innerHTML = `
+    <h2 class="text-xl font-black">${clienteActual.nombre}</h2>
+    <p class="text-sm text-slate-500">${clienteActual.obras.length} trabajos</p>
   `;
 
   irAPantalla("expediente");
 }
 
-/*************************
- * OBRAS
- *************************/
+/* ========= OBRAS ========= */
 function confirmarNombreObra() {
-  const nombre = $("input-nombre-obra").value.trim();
-  if (nombre.length < 3) {
-    alert("Introduce un nombre válido");
-    return;
-  }
+  const input = document.getElementById("input-nombre-obra");
+  const nombre = input.value.trim();
+  if (!nombre) return alert("Introduce un nombre");
 
   obraActual = {
+    id: Date.now(),
     nombre,
-    medidas: []
+    mediciones: []
   };
 
-  clientes[clienteActual].obras.push(obraActual);
-  guardarStorage();
+  clienteActual.obras.push(obraActual);
+  guardar();
 
-  $("titulo-obra-actual").innerText = nombre;
-  $("lista-medidas-obra").innerHTML = "";
-  $("input-nombre-obra").value = "";
-
+  document.getElementById("titulo-obra-actual").textContent = nombre;
   renderBotonesTrabajo();
+  renderMediciones();
+
+  input.value = "";
   irAPantalla("trabajo");
 }
 
 function guardarObraCompleta() {
-  guardarStorage();
-  navigator.vibrate?.(30);
+  guardar();
   alert("Obra guardada");
   irAPantalla("expediente");
 }
 
-/*************************
- * TRABAJO / MEDICIONES
- *************************/
-const tiposTrabajo = [
-  "Pintura",
-  "Pladur",
-  "Alicatado",
-  "Electricidad",
-  "Fontanería",
-  "Horas"
-];
-
+/* ========= TRABAJO / MEDICIONES ========= */
 function renderBotonesTrabajo() {
-  const cont = $("botones-trabajo");
+  const cont = document.getElementById("botones-trabajo");
   cont.innerHTML = "";
 
-  tiposTrabajo.forEach(tipo => {
-    const btn = document.createElement("button");
-    btn.className =
-      "bg-blue-600 text-white p-4 rounded-2xl font-black uppercase active-scale";
-    btn.innerText = tipo;
-    btn.onclick = () => abrirCalculadora(tipo);
-    cont.appendChild(btn);
+  ["Medición m²","Horas","Unidades"].forEach(tipo => {
+    const b = document.createElement("button");
+    b.className = "bg-blue-600 text-white py-6 rounded-2xl font-black active-scale";
+    b.textContent = tipo;
+    b.onclick = () => abrirCalculadora(tipo);
+    cont.appendChild(b);
   });
 }
 
+function renderMediciones() {
+  const lista = document.getElementById("lista-medidas-obra");
+  lista.innerHTML = "";
+
+  obraActual.mediciones.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "bg-white p-3 rounded-xl shadow text-sm";
+    div.textContent = `${m.tipo}: ${m.valor}`;
+    lista.appendChild(div);
+  });
+}
+
+/* ========= CALCULADORA ========= */
 function abrirCalculadora(tipo) {
   calcValor = "0";
-  calcContexto = tipo;
-  $("calc-display").innerText = "0";
-  $("calc-titulo").innerText = tipo;
+  actualizarDisplay();
+  document.getElementById("calc-titulo").textContent = tipo;
 
-  $("modal-calc").classList.remove("hidden");
-  document.body.classList.add("no-scroll");
+  calcCallback = valor => {
+    obraActual.mediciones.push({ tipo, valor });
+    guardar();
+    renderMediciones();
+  };
+
+  document.getElementById("modal-calc").classList.remove("hidden");
 }
 
 function cerrarCalc() {
-  $("modal-calc").classList.add("hidden");
-  document.body.classList.remove("no-scroll");
+  document.getElementById("modal-calc").classList.add("hidden");
 }
 
-/*************************
- * CALCULADORA
- *************************/
-function teclear(valor) {
-  if (valor === "DEL") {
+function teclear(v) {
+  if (v === "DEL") {
     calcValor = "0";
-  } else if (valor === "OK") {
-    guardarMedida();
+  } else if (v === "OK") {
+    if (calcCallback) calcCallback(calcValor);
     cerrarCalc();
     return;
+  } else if (v === "+") {
+    calcValor += " + ";
   } else {
-    if (calcValor === "0") calcValor = "";
-    calcValor += valor;
+    if (calcValor === "0") calcValor = v;
+    else calcValor += v;
   }
-  $("calc-display").innerText = calcValor;
+  actualizarDisplay();
 }
 
-function guardarMedida() {
-  const normalizado = calcValor.replace(",", ".");
-  const numero = parseFloat(normalizado);
-
-  if (isNaN(numero)) return;
-
-  obraActual.medidas.push({
-    tipo: calcContexto,
-    valor: numero,
-    fecha: new Date().toISOString()
-  });
-
-  renderMedidas();
-  guardarStorage();
+function actualizarDisplay() {
+  document.getElementById("calc-display").textContent = calcValor;
 }
 
-function renderMedidas() {
-  const cont = $("lista-medidas-obra");
-  cont.innerHTML = "";
-
-  obraActual.medidas.forEach(m => {
-    const div = document.createElement("div");
-    div.className =
-      "bg-white p-3 rounded-xl shadow flex justify-between font-bold";
-    div.innerHTML = `
-      <span>${m.tipo}</span>
-      <span>${m.valor.toFixed(2)}</span>
-    `;
-    cont.appendChild(div);
-  });
+/* ========= GUARDADO ========= */
+function guardar() {
+  localStorage.setItem("clientes", JSON.stringify(clientes));
 }
 
-/*************************
- * INICIO
- *************************/
-renderClientes();
-
-/*************************
- * SERVICE WORKER
- *************************/
+/* ========= PWA / SERVICE WORKER ========= */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js");
